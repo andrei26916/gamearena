@@ -35,13 +35,15 @@ class ProductService
      */
     public function update(array $data)
     {
-        $product = Product::where('eId', $data['eId'])->update([
-               'title' => $data['title'],
-               'price' => $data['price'],
-               'eId' => $data['eId']
-        ]);
+        $product = Product::where('eId', $data['eId'])->first();
         if ($product){
-            dispatch(new ProductNotification(Product::where('eId', $data['eId'])->first(), 'updated'));
+            $product->title = $data['title'];
+            $product->price = $data['price'];
+            $product->save();
+            if (isset($data['categories']) && is_array($data['categories'])){
+                $product->categories()->sync($data['categories']);
+            }
+            dispatch(new ProductNotification($product, 'updated'));
         }
         return $product;
     }

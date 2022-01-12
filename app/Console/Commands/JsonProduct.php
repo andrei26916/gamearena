@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\CategoryProduct;
+use App\Models\Category;
 use App\Services\ProductService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Validator;
@@ -64,10 +64,15 @@ class JsonProduct extends Command
                 return 0;
             }
 
+            $categories = Category::whereIn('eId', $item['categoriesEId'])->get();
+            $item['categories'] = $categories->map(function ($query){
+                return $query->id;
+            })->toArray();
+
             $product = $this->productService->update($item);
             if (!$product){
                 $product = $this->productService->create($item);
-                $product->categories()->attach($item['categoriesEId']);
+                $product->categories()->attach($item['categories']);
             }
 
             dump($item);
